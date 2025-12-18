@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+
+# Model files (VERY IMPORTANT)
+*.pth
+*.h5
+
+# Datasets
+data/
+dataset/
+*.zip
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+

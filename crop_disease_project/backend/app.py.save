@@ -1,0 +1,133 @@
+
+
+import os
+import uuid
+from typing import Optional
+
+import torch
+import torch.nn.functional as F
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from model_loader import load_model_and_classes
+from recommendation_engine import get_recommendation
+from utils import preprocess_image, ensure_logs_dir, log_prediction, log_feedback
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOGS_DIR = ensure_logs_dir(BASE_DIR)
+
+app = FastAPI(
+    title="Crop Disease Detection and Recommendation API",
+    description="AI-based crop leaf disease detection using a CNN trained on Kaggle's New Plant Diseases Dataset.",
+    version="1.0.0",
+)
+
+# CORS (allow frontend on localhost)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can restrict this to specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Initialize model variables (lazy loading)
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+MODEL = None
+IDX_TO_CLASS = None
+
+
+def get_model():
+    """Lazy load model on first use."""
+    global MODEL, IDX_TO_CLASS
+    if MODEL is None or IDX_TO_CLASS is None:
+        try:
+            MODEL, IDX_TO_CLASS = load_model_and_classes(BASE_DIR, DEVICE)
+        except FileNotFoundError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Model not available. Please train the model first. Error: {e}"
+            )
+    return MODEL, IDX_TO_CLASS
+
+
+class FeedbackRequest(BaseModel):
+    image_id: str
+    predicted_label: str
+    user_feedback: str  # "correct" or "incorrect"
+    correct_label: Optional[str] = ""
+
+
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    """Predict crop disease from uploaded leaf image."""
+    if file.content_type not in ["image/jpeg", "image/png", "image/jpg"]:
+        raise HTTPException(status_code=400, detail="File must be an image (JPEG/PNG).")
+
+    image_bytes = await file.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Empty file uploaded.")
+
+    # Generate a unique ID for this image (for logs/feedback)
+    image_id = str(uuid.uuid4())
+
+    # Preprocess image
+    try:
+        input_tensor = preprocess_image(image_bytes).to(DEVICE)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
+
+    # Load model if not already loaded
+    model, idx_to_class = get_model()
+
+    with torch.no_grad():
+        outputs = model(input_tensor)
+        probs = F.softmax(outputs, dim=1)
+        confidence, pred_idx = torch.max(probs, 1)
+        confidence = confidence.item()
+        pred_idx = pred_idx.item()
+
+    predicted_label = idx_to_class[pred_idx]  # e.g., "Tomato___Late_blight"
+    if "___" in predicted_label:
+        crop_name, disease_name = predicted_label.split("___", 1)
+    else:
+        crop_name, disease_name = "Unknown", predicted_label
+
+    recommendation = get_recommendation(crop_name, disease_name)
+
+    # Log prediction
+    log_prediction(LOGS_DIR, image_id, predicted_label, confidence)
+
+    return {
+        "image_id": image_id,
+        "crop_name": crop_name,
+        "disease_name": disease_name,
+        "confidence_score": round(confidence * 100, 2),  # in %
+        "predicted_label_raw": predicted_label,
+        "recommendation": recommendation,
+    }
+
+
+@app.post("/feedback")
+async def feedback(request: FeedbackRequest):
+    """Receive user feedback about a prediction."""
+    if request.user_feedback not in ["correct", "incorrect"]:
+        raise HTTPException(status_code=400, detail="user_feedback must be 'correct' or 'incorrect'.")
+
+    log_feedback(
+        LOGS_DIR,
+        request.image_id,
+        request.predicted_label,
+        request.user_feedback,
+        request.correct_label or "",
+    )
+
+    return {"status": "success", "message": "Feedback recorded. Thank you!"}
+cd "/Users/ayush/Library/Mobile Documents/com~apple~CloudDocs/Developer/crop_disease_project/crop_disease_project/backend"
+
+
+ls
+
+

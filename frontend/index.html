@@ -1,0 +1,111 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crop Disease Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- BASIC SAFE CSS -->
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+    
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+    }
+
+    .upload-section {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+      margin: 15px auto;
+      border-radius: 6px;
+    }
+
+    #resultSection {
+      margin-top: 20px;
+      padding: 15px;
+      border-top: 1px solid #ddd;
+    }
+
+    p {
+      margin: 6px 0;
+    }
+
+    strong {
+      color: #333;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>AI-based Crop Disease Detection</h1>
+    <p style="text-align:center;">
+      Upload a leaf image to detect disease and get recommendations
+    </p>
+
+    <!-- Upload -->
+    <div class="upload-section">
+      <input type="file" id="imageInput" accept="image/*" />
+      <br />
+      <button id="predictBtn">Predict</button>
+    </div>
+
+    <!-- Image Preview -->
+    <img id="imagePreview" src="" alt="" />
+
+    <!-- Result -->
+    <div id="resultSection" style="display:none;">
+      <h2>Prediction Result</h2>
+
+      <p><strong>Crop:</strong> <span id="cropName"></span></p>
+      <p><strong>Disease:</strong> <span id="diseaseName"></span></p>
+      <p><strong>Confidence:</strong> <span id="confidenceScore"></span></p>
+
+      <h3>Recommendation</h3>
+      <p><strong>Description:</strong> <span id="desc"></span></p>
+      <p><strong>Symptoms:</strong> <span id="symptoms"></span></p>
+      <p><strong>Organic Treatment:</strong> <span id="organic"></span></p>
+      <p><strong>Chemical Treatment:</strong> <span id="chemical"></span></p>
+      <p><strong>Preventive Measures:</strong> <span id="preventive"></span></p>
+    </div>
+  </div>
+
+  <!-- JS LAST -->
+  <script src="app.js"></script>
+</body>
+</html>
+
