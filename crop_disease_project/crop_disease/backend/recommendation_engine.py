@@ -1,4 +1,4 @@
-"""Rule-based crop disease recommendation helper."""
+
 from typing import Dict
 
 
