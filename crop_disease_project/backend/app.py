@@ -12,7 +12,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ✅ CORS (frontend fix)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -73,17 +73,17 @@ async def predict(file: UploadFile = File(...)):
                 detail=f"Error during prediction: {str(e)}"
             )
 
-    # ✅ SPLIT crop and disease
+    # SPLIT crop and disease
     if "___" in predicted_class:
         crop_name, disease_name = predicted_class.split("___", 1)
     else:
         crop_name = predicted_class
         disease_name = " "
 
-    # ✅ GET RECOMMENDATION
+    #  GET RECOMMENDATION
     recommendation = get_recommendation(crop_name, disease_name)
 
-    # ✅ RETURN RESPONSE (INSIDE FUNCTION)
+    #  RETURN RESPONSE (INSIDE FUNCTION)
     return {
         "predicted_class": predicted_class,
         "confidence": round(confidence, 4),
