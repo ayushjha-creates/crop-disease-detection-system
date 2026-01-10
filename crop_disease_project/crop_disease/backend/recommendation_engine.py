@@ -2,7 +2,6 @@
 from typing import Dict
 
 
-# Example rule-based recommendations keyed by Kaggle-style labels.
 RECOMMENDATIONS: Dict[str, Dict[str, str]] = {
     "Apple___Apple_scab": {
         "disease_description": "Fungal disease causing olive-brown spots on apple leaves and fruits.",
@@ -107,7 +106,7 @@ def get_recommendation(crop_name: str, disease_name: str) -> Dict[str, str]:
     if rec:
         return rec
 
-    # Generic fallback recommendation.
+    
     return {
         "disease_description": (
             "The system detected a potential issue with the crop. Detailed information "
