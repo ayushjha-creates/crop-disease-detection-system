@@ -1,14 +1,13 @@
-// Complete Frontend-Backend Integration
-// Crop Disease Detection Application
+
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log(" Initializing Crop Disease Detection App");
 
-  // Get API URL - configured in index.html
+  
   const API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8030";
   console.log("📡 API Base URL:", API_BASE_URL);
 
-  // Get all DOM elements
+  //  all DOM elements
   const elements = {
     // Input elements
     imageInput: document.getElementById("imageInput"),
@@ -44,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     retryBtn: document.getElementById("retryBtn")
   };
 
-  // Verify critical elements exist
+  
   const requiredElements = ['imageInput', 'predictBtn', 'resultSection'];
   for (const key of requiredElements) {
     if (!elements[key]) {
@@ -58,9 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastPrediction = null;
   let selectedFile = null;
 
-  // ============================================
-  // BACKEND CONNECTION TEST
-  // ============================================
+  
   async function testBackendConnection() {
     updateConnectionStatus("checking", "Checking connection...");
     
@@ -96,17 +93,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Test connection on load
+  
   testBackendConnection();
 
-  // ============================================
-  // FILE UPLOAD HANDLING
-  // ============================================
+  // FILE UPLOAD 
   if (elements.imageInput) {
     // File input change
     elements.imageInput.addEventListener("change", handleFileSelect);
     
-    // Drag and drop
+    
     if (elements.uploadArea) {
       elements.uploadArea.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -140,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log(" File selected:", file.name, "Type:", file.type, "Size:", (file.size / 1024).toFixed(2), "KB");
 
-    // Validate file size (10MB max)
+    
     if (file.size > 10 * 1024 * 1024) {
       showError("File is too large. Please select an image smaller than 10MB.");
       elements.imageInput.value = "";
@@ -148,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Validate file type
+    
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/bmp"];
     if (!validTypes.includes(file.type.toLowerCase())) {
       showError("Please upload a valid image file (JPEG, PNG, or BMP).");
@@ -198,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Remove image button
+  // remove img bttn
   if (elements.removeImage) {
     elements.removeImage.addEventListener("click", () => {
       elements.imageInput.value = "";
@@ -206,9 +201,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ============================================
+  
   // PREDICTION HANDLER
-  // ============================================
   async function handlePredict() {
     console.log(" Starting prediction...");
 
@@ -291,9 +285,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ============================================
+
   // DISPLAY RESULTS
-  // ============================================
   function displayResults(data) {
     if (!elements.resultSection) return;
 
@@ -354,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "Maintain good agricultural practices and monitor the crop regularly.";
     }
 
-    // Show results with animation
+    // Show results 
     elements.resultSection.style.display = "block";
     setTimeout(() => {
       elements.resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -363,9 +356,8 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(" Results displayed successfully");
   }
 
-  // ============================================
+  
   // UI HELPER FUNCTIONS
-  // ============================================
   function showLoading(show) {
     if (elements.loadingIndicator) {
       elements.loadingIndicator.style.display = show ? "block" : "none";
@@ -390,9 +382,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ============================================
-  // EVENT LISTENERS
-  // ============================================
+ 
+  
   // Predict button
   if (elements.predictBtn) {
     elements.predictBtn.addEventListener("click", async (e) => {
@@ -426,10 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
-  // ============================================
-  // INITIALIZATION COMPLETE
-  // ============================================
+  
   console.log(" Frontend initialization complete");
   console.log(" Ready to accept predictions!");
   console.log("Backend URL:", API_BASE_URL);
