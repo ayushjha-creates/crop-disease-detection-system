@@ -1,0 +1,100 @@
+"""
+Configuration file for model training
+"""
+import os
+
+class Config:
+    # Base directories
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_DIR = os.path.join(BASE_DIR, "data")
+
+    # 👉 Correct dataset paths
+    train_data_path = os.path.join(DATA_DIR, "train")
+    val_data_path   = os.path.join(DATA_DIR, "valid")
+    test_data_path  = os.path.join(DATA_DIR, "test")
+
+    # Model / training hyperparameters
+    NUM_CLASSES = 38   # for this plant disease dataset
+    batch_size = 32
+    num_workers = 2
+    learning_rate = 1e-3
+    lr_step_size = 7
+    lr_gamma = 0.1
+    num_epochs = 10
+
+    # Where to save model
+    model_save_path = os.path.join(BASE_DIR, "saved_models", "best_model.pth")
+    @property
+    def train_data_path(self):
+        return self.TRAIN_DATA_PATH
+    
+    @property
+    def val_data_path(self):
+        return self.VAL_DATA_PATH
+    
+    @property
+    def test_data_path(self):
+        return self.TEST_DATA_PATH
+    
+    @property
+    def model_save_path(self):
+        return self.MODEL_SAVE_PATH
+    
+    @property
+    def batch_size(self):
+        return self.BATCH_SIZE
+    
+    @property
+    def num_epochs(self):
+        return self.NUM_EPOCHS
+    
+    @property
+    def learning_rate(self):
+        return self.LEARNING_RATE
+    
+    @property
+    def lr_step_size(self):
+        return self.LR_STEP_SIZE
+    
+    @property
+    def lr_gamma(self):
+        return self.LR_GAMMA
+    
+    @property
+    def num_workers(self):
+        return self.NUM_WORKERS
+# model/config.py
+
+import os
+
+# Paths
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "data", "raw", "new-plant-diseases-dataset")
+SAVE_DIR = os.path.join(BASE_DIR, "model", "saved_models")
+
+os.makedirs(SAVE_DIR, exist_ok=True)
+
+# Training settings
+IMG_SIZE = 224
+BATCH_SIZE = 32
+NUM_EPOCHS_STAGE1 = 10   # feature extraction
+NUM_EPOCHS_STAGE2 = 10   # fine-tuning
+LEARNING_RATE_STAGE1 = 1e-3
+LEARNING_RATE_STAGE2 = 1e-4
+PATIENCE = 5             # early stopping patience
+NUM_WORKERS = 4
+RANDOM_SEED = 42
+
+from config import Config
+from dataset_loader import CropDiseaseDataset
+
+c = Config()
+print("TRAIN PATH =", c.train_data_path)
+print("VALID PATH =", c.val_data_path)
+
+train_ds = CropDiseaseDataset(c.train_data_path)
+print("Train images =", len(train_ds))
+print("Classes =", list(train_ds.class_indices.items())[:5], "...")
+EOF
+
+

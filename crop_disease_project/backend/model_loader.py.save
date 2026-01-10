@@ -1,0 +1,48 @@
+import torch import json from torchvision import models, transforms import 
+torch.nn as nn import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+MODEL_PATH = os.path.join(
+    BASE_DIR, "model", "saved_models", "best_model.pth"
+)
+CLASS_PATH = os.path.join(
+    BASE_DIR, "model", "saved_models", "class_indices.json"
+)
+
+# Load class names
+with open(CLASS_INDICES_PATH) as f:
+    class_indices = json.load(f)
+
+# If keys are class names → invert mapping
+if isinstance(list(class_indices.keys())[0], str) and not list(class_indices.keys())[0].isdigit():
+    idx_to_class = {v: k for k, v in class_indices.items()}
+else:
+    idx_to_class = {int(k): v for k, v in class_indices.items()}
+
+
+NUM_CLASSES = len(idx_to_class)
+
+# Load model
+model = models.resnet18(weights=None)
+model.fc = nn.Linear(model.fc.in_features, NUM_CLASSES)
+model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
+model.eval()
+
+# Image preprocessing
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
+
+def predict(image):
+    image = transform(image).unsqueeze(0)
+    with torch.no_grad():
+        outputs = model(image)
+        probs = torch.softmax(outputs, dim=1)
+        idx = torch.argmax(probs, dim=1).item()
+    return idx_to_class[idx], probs[0][idx].item()

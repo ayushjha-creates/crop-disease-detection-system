@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: crop_disease_backend
+    ports:
+      - "8030:8030"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount model directory (read-only) - maps to both possible locations
+      - ./model/saved_models:/app/model_files/saved_models:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8030/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+
+networks:
+  default:
+    name: crop_disease_network

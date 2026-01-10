@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crop Disease Detection - AI Powered</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌱 AI-Powered Crop Disease Detection</h1>
+      <p class="subtitle">Upload a leaf image to detect diseases and get treatment recommendations</p>
+      
+    </header>
+
+    <main>
+      <!-- Upload Section -->
+      <section class="upload-section">
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="imageInput" accept="image/*" />
+          <label for="imageInput" class="upload-label">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">
+              <strong>Click to upload</strong> or drag and drop
+              <br>
+              <small>PNG, JPG, JPEG, BMP up to 10MB</small>
+            </div>
+          </label>
+        </div>
+
+        <div class="preview-container" id="previewContainer" style="display:none;">
+          <img id="imagePreview" src="" alt="Preview" />
+          <button id="removeImage" class="remove-btn">✕ Remove</button>
+        </div>
+
+        <button id="predictBtn" class="predict-btn" disabled>
+          🔍 Analyze Disease
+        </button>
+      </section>
+
+      <!-- Loading Indicator -->
+      <div id="loadingIndicator" class="loading" style="display:none;">
+        <div class="spinner"></div>
+        <p>Analyzing image... Please wait</p>
+      </div>
+
+      <!-- Results Section -->
+      <section id="resultSection" class="results-section" style="display:none;">
+        <h2>📊 Prediction Results</h2>
+        
+        <div class="results-grid">
+          <div class="result-card">
+            <h3>Crop Information</h3>
+            <div class="result-item">
+              <span class="label">Crop:</span>
+              <span id="cropName" class="value">-</span>
+            </div>
+            <div class="result-item">
+              <span class="label">Disease:</span>
+              <span id="diseaseName" class="value">-</span>
+            </div>
+            <div class="result-item">
+              <span class="label">Confidence:</span>
+              <span id="confidenceScore" class="value confidence">-</span>
+            </div>
+          </div>
+
+          <div class="result-card full-width">
+            <h3>💊 Treatment Recommendations</h3>
+            
+            <div class="recommendation-section">
+              <h4>📝 Disease Description</h4>
+              <p id="desc" class="recommendation-text">-</p>
+            </div>
+
+            <div class="recommendation-section">
+              <h4>🩺 Symptoms</h4>
+              <p id="symptoms" class="recommendation-text">-</p>
+            </div>
+
+            <div class="recommendation-section">
+              <h4>🌿 Organic Treatment</h4>
+              <p id="organic" class="recommendation-text">-</p>
+            </div>
+
+            <div class="recommendation-section">
+              <h4>🧪 Chemical Treatment</h4>
+              <p id="chemical" class="recommendation-text">-</p>
+            </div>
+
+            <div class="recommendation-section">
+              <h4>🛡️ Preventive Measures</h4>
+              <p id="preventive" class="recommendation-text">-</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="analyzeAnother" class="secondary-btn">🔄 Analyze Another Image</button>
+      </section>
+
+      <!-- Error Section -->
+      <div id="errorSection" class="error-section" style="display:none;">
+        <h3>❌ Error</h3>
+        <p id="errorMessage"></p>
+        <button id="retryBtn" class="secondary-btn">Retry</button>
+      </div>
+    </main>
+
+    <footer>
+      <p>AI-Powered Crop Disease Detection System | Powered by Deep Learning</p>
+    </footer>
+  </div>
+
+  <script>
+    // Set API URL - ensure it matches your backend
+    window.API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8030";
+    console.log("API Base URL configured:", window.API_BASE_URL);
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
