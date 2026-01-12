@@ -2,6 +2,7 @@
 from typing import Dict
 
 
+# Disease treatment database with organic and chemical options
 RECOMMENDATIONS: Dict[str, Dict[str, str]] = {
     "Apple___Apple_scab": {
         "disease_description": "Fungal disease causing olive-brown spots on apple leaves and fruits.",
@@ -101,7 +102,7 @@ def get_recommendation(crop_name: str, disease_name: str) -> Dict[str, str]:
     crop_name = crop_name.strip() if crop_name else ""
     disease_name = disease_name.strip() if disease_name else ""
     
-    
+# Handle healthy plants
     if not disease_name or disease_name.lower() == "healthy" or disease_name == " ":
         return {
             "disease_description": (
@@ -112,35 +113,31 @@ def get_recommendation(crop_name: str, disease_name: str) -> Dict[str, str]:
                 "No treatment needed. Continue with regular healthy crop management practices."
             ),
             "treatment_chemical": (
-                "No chemical treatment required. The crop is healthy."
-            ),
-            "preventive_measures": (
-                "Continue monitoring the crop regularly, maintain proper irrigation and "
-                "nutrition, practice crop rotation, and ensure good field hygiene to prevent "
-                "future disease outbreaks."
+                "No chemical treatment needed. Maintain good agricultural practices to "
+                "prevent future disease outbreaks."
             ),
         }
     
-    
+    # Try exact match first
     key = f"{crop_name}___{disease_name}"
     rec = RECOMMENDATIONS.get(key)
     
     if rec:
         return rec
     
-    
+    # Try normalized key (fallback for format differences)
     normalized_key = key.replace(" ", "_").replace("__", "_")
     rec = RECOMMENDATIONS.get(normalized_key)
     
     if rec:
         return rec
     
-    
+    # Search for partial matches by crop name
     for rec_key in RECOMMENDATIONS.keys():
         if crop_name.lower() in rec_key.lower() and disease_name.lower() in rec_key.lower():
             return RECOMMENDATIONS[rec_key]
 
-    
+    # Return generic advice for unknown diseases
     return {
         "disease_description": (
             f"The system detected a potential issue with {crop_name} crop. "
