@@ -96,10 +96,7 @@ RECOMMENDATIONS: Dict[str, Dict[str, str]] = {
 
 
 def get_recommendation(crop_name: str, disease_name: str) -> Dict[str, str]:
-    """
-    Return a recommendation dictionary based on crop and disease.
-    Falls back to a generic advisory if no rule exists.
-    """
+    """Return treatment advice based on crop and disease."""
     
     crop_name = crop_name.strip() if crop_name else ""
     disease_name = disease_name.strip() if disease_name else ""

@@ -8,6 +8,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
 
+# Search paths for model files (local, dev, and Docker environments)
 POSSIBLE_MODEL_PATHS = [
     os.path.join(PROJECT_ROOT, "model", "saved_models", "best_model.pth"),
     os.path.join(BASE_DIR, "model_files", "saved_models", "best_model.pth"),
@@ -21,7 +22,6 @@ POSSIBLE_CLASS_PATHS = [
     os.path.join("/app", "model_files", "saved_models", "class_indices.json"),
     os.path.join(BASE_DIR, "saved_models", "class_indices.json"),
 ]
-
 
 MODEL_PATH = None
 CLASS_INDICES_PATH = None
@@ -45,6 +45,7 @@ if CLASS_INDICES_PATH is None:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_model_and_classes():
+    """Load PyTorch model and class mappings for inference."""
     
     if not os.path.exists(CLASS_INDICES_PATH):
         tried_paths = "\n".join([f"  - {path}" for path in POSSIBLE_CLASS_PATHS])

@@ -1,13 +1,10 @@
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log(" Initializing Crop Disease Detection App");
+  const API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8000";
+  console.log("API Base URL:", API_BASE_URL);
 
-  
-  const API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8030";
-  console.log("📡 API Base URL:", API_BASE_URL);
-
-  //  all DOM elements
+  // Cache DOM elements
   const elements = {
     // Input elements
     imageInput: document.getElementById("imageInput"),

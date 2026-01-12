@@ -6,13 +6,13 @@ import io
 from model_loader import load_model_and_classes, predict_image
 from recommendation_engine import get_recommendation
 
-
 app = FastAPI(
     title="Crop Disease Detection API",
     version="1.0.0"
 )
 
 
+# Enable CORS for frontend-backend communication
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,14 +21,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# Load ML model and class mappings on startup
 model, idx_to_class = load_model_and_classes()
-
 
 @app.get("/")
 def home():
     return {"message": "API running"}
-
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -67,14 +65,14 @@ async def predict(file: UploadFile = File(...)):
                 detail=f"Error during prediction: {str(e)}"
             )
 
-        # SPLIT crop and disease
+        # Extract crop and disease from class name
         if "___" in predicted_class:
             crop_name, disease_name = predicted_class.split("___", 1)
         else:
             crop_name = predicted_class
             disease_name = " "
 
-        #  GET RECOMMENDATION
+        # Get treatment recommendation
         recommendation = get_recommendation(crop_name, disease_name)
 
         #  RETURN RESPONSE (INSIDE FUNCTION)

@@ -25,12 +25,7 @@ from config import Config
 
 class ModelTrainer:
     def __init__(self, config: Config):
-        """
-        Initialize model trainer
-
-        Args:
-            config: Config object with training parameters
-        """
+        """Initialize model trainer with configuration."""
         self.config = config
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.device}")
@@ -226,7 +221,7 @@ class ModelTrainer:
         print(f"Class indices saved to {class_indices_path}")
 
     def train(self):
-        """Main training loop."""
+        """Run complete training pipeline."""
         print("Loading datasets...")
         self.train_loader, self.val_loader = self._get_data_loaders()
 
