@@ -33,10 +33,8 @@ def home():
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     try:
-        
         if not file:
             raise HTTPException(status_code=400, detail="No file uploaded")
-        
         
         if file.content_type and file.content_type not in ["image/jpeg", "image/jpg", "image/png", "image/bmp"]:
             raise HTTPException(
@@ -44,17 +42,13 @@ async def predict(file: UploadFile = File(...)):
                 detail=f"Invalid file type: {file.content_type}. Please upload an image (JPEG, PNG, or BMP)."
             )
         
-      
         image_bytes = await file.read()
         
-    
         if not image_bytes or len(image_bytes) == 0:
             raise HTTPException(status_code=400, detail="Uploaded file is empty")
         
-        
         try:
             image = Image.open(io.BytesIO(image_bytes))
-       
             image = image.convert("RGB")
         except Exception as e:
             raise HTTPException(
@@ -73,22 +67,30 @@ async def predict(file: UploadFile = File(...)):
                 detail=f"Error during prediction: {str(e)}"
             )
 
-    # SPLIT crop and disease
-    if "___" in predicted_class:
-        crop_name, disease_name = predicted_class.split("___", 1)
-    else:
-        crop_name = predicted_class
-        disease_name = " "
+        # SPLIT crop and disease
+        if "___" in predicted_class:
+            crop_name, disease_name = predicted_class.split("___", 1)
+        else:
+            crop_name = predicted_class
+            disease_name = " "
 
-    #  GET RECOMMENDATION
-    recommendation = get_recommendation(crop_name, disease_name)
+        #  GET RECOMMENDATION
+        recommendation = get_recommendation(crop_name, disease_name)
 
-    #  RETURN RESPONSE (INSIDE FUNCTION)
-    return {
-        "predicted_class": predicted_class,
-        "confidence": round(confidence, 4),
-        "crop_name": crop_name,
-        "disease_name": disease_name if disease_name else "Healthy",
-        "recommendation": recommendation
-    }
+        #  RETURN RESPONSE (INSIDE FUNCTION)
+        return {
+            "predicted_class": predicted_class,
+            "confidence": round(confidence, 4),
+            "crop_name": crop_name,
+            "disease_name": disease_name if disease_name else "Healthy",
+            "recommendation": recommendation
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error: {str(e)}"
+        )
 
