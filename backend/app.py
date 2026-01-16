@@ -1,94 +1,142 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+import torch
+import json
+import os
+from torchvision import models, transforms
 from PIL import Image
-import io
 
-from model_loader import load_model_and_classes, predict_image
-from recommendation_engine import get_recommendation
-
-app = FastAPI(
-    title="Crop Disease Detection API",
-    version="1.0.0"
-)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
 
-# Enable CORS for frontend-backend communication
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Search paths for model files (local, dev, and Docker environments)
+POSSIBLE_MODEL_PATHS = [
+    os.path.join(PROJECT_ROOT, "model", "saved_models", "best_model.pth"),
+    os.path.join(BASE_DIR, "model_files", "saved_models", "best_model.pth"),
+    os.path.join("/app", "model_files", "saved_models", "best_model.pth"),
+    os.path.join(BASE_DIR, "saved_models", "best_model.pth"),
+]
 
-# Load ML model and class mappings on startup
-model, idx_to_class = load_model_and_classes()
+POSSIBLE_CLASS_PATHS = [
+    os.path.join(PROJECT_ROOT, "model", "saved_models", "class_indices.json"),
+    os.path.join(BASE_DIR, "model_files", "saved_models", "class_indices.json"),
+    os.path.join("/app", "model_files", "saved_models", "class_indices.json"),
+    os.path.join(BASE_DIR, "saved_models", "class_indices.json"),
+]
 
-@app.get("/")
-def home():
-    return {"message": "API running"}
+MODEL_PATH = None
+CLASS_INDICES_PATH = None
 
-@app.post("/predict")
-async def predict(file: UploadFile = File(...)):
-    try:
-        if not file:
-            raise HTTPException(status_code=400, detail="No file uploaded")
-        
-        if file.content_type and file.content_type not in ["image/jpeg", "image/jpg", "image/png", "image/bmp"]:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Invalid file type: {file.content_type}. Please upload an image (JPEG, PNG, or BMP)."
-            )
-        
-        image_bytes = await file.read()
-        
-        if not image_bytes or len(image_bytes) == 0:
-            raise HTTPException(status_code=400, detail="Uploaded file is empty")
-        
-        try:
-            image = Image.open(io.BytesIO(image_bytes))
-            image = image.convert("RGB")
-        except Exception as e:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Failed to process image file. Please ensure the file is a valid image. Error: {str(e)}"
-            )
-        
-        # Predict
-        try:
-            predicted_class, confidence = predict_image(
-                model, idx_to_class, image
-            )
-        except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error during prediction: {str(e)}"
-            )
+for path in POSSIBLE_MODEL_PATHS:
+    if os.path.exists(path):
+        MODEL_PATH = path
+        break
 
-        # Extract crop and disease from class name
-        if "___" in predicted_class:
-            crop_name, disease_name = predicted_class.split("___", 1)
-        else:
-            crop_name = predicted_class
-            disease_name = " "
+for path in POSSIBLE_CLASS_PATHS:
+    if os.path.exists(path):
+        CLASS_INDICES_PATH = path
+        break
 
-        # Get treatment recommendation
-        recommendation = get_recommendation(crop_name, disease_name)
 
-        #  RETURN RESPONSE (INSIDE FUNCTION)
-        return {
-            "predicted_class": predicted_class,
-            "confidence": round(confidence, 4),
-            "crop_name": crop_name,
-            "disease_name": disease_name if disease_name else "Healthy",
-            "recommendation": recommendation
-        }
+if MODEL_PATH is None:
+    MODEL_PATH = POSSIBLE_MODEL_PATHS[0]
+if CLASS_INDICES_PATH is None:
+    CLASS_INDICES_PATH = POSSIBLE_CLASS_PATHS[0]
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def load_model_and_classes():
+    """Load PyTorch model and class mappings for inference."""
     
-    except HTTPException:
-        raise
+    if not os.path.exists(CLASS_INDICES_PATH):
+        tried_paths = "\n".join([f"  - {path}" for path in POSSIBLE_CLASS_PATHS])
+        raise FileNotFoundError(
+            f"Class indices file not found at: {CLASS_INDICES_PATH}\n"
+            f"Tried the following paths:\n{tried_paths}\n"
+            f"Current working directory: {os.getcwd()}\n"
+            f"Backend directory: {BASE_DIR}\n"
+            f"Please ensure the model files are in one of these locations."
+        )
+    if not os.path.exists(MODEL_PATH):
+        tried_paths = "\n".join([f"  - {path}" for path in POSSIBLE_MODEL_PATHS])
+        raise FileNotFoundError(
+            f"Model file not found at: {MODEL_PATH}\n"
+            f"Tried the following paths:\n{tried_paths}\n"
+            f"Current working directory: {os.getcwd()}\n"
+            f"Backend directory: {BASE_DIR}\n"
+            f"Please ensure the model files are in one of these locations."
+        )
+    
+    with open(CLASS_INDICES_PATH, "r") as f:
+        class_indices = json.load(f)
+
+    
+    if not class_indices:
+        raise ValueError(f"Class indices file is empty: {CLASS_INDICES_PATH}")
+
+    
+    first_key = list(class_indices.keys())[0]
+    try:
+        
+        if str(first_key).isdigit():
+            
+            idx_to_class = {int(k): v for k, v in class_indices.items()}
+        else:
+            
+            idx_to_class = {v: k for k, v in class_indices.items()}
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unexpected error: {str(e)}"
+        raise ValueError(
+            f"Failed to parse class indices. Expected format with numeric keys or reversed mapping. Error: {str(e)}"
         )
 
+    num_classes = len(idx_to_class)
+
+    model = models.resnet18(pretrained=False)
+    model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
+
+    try:
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to load model from {MODEL_PATH}. Error: {str(e)}"
+        )
+    
+    model.to(device)
+    model.eval()
+
+    return model, idx_to_class
+
+
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
+
+def predict_image(model, idx_to_class, image: Image.Image):
+    try:
+        image = transform(image).unsqueeze(0).to(device)
+    except Exception as e:
+        raise ValueError(f"Failed to transform image: {str(e)}")
+
+    with torch.no_grad():
+        try:
+            outputs = model(image)
+            probs = torch.softmax(outputs, dim=1)
+            confidence, predicted_idx = torch.max(probs, 1)
+        except Exception as e:
+            raise RuntimeError(f"Model prediction failed: {str(e)}")
+
+    predicted_idx_value = predicted_idx.item()
+    confidence_value = confidence.item()
+    
+    
+    if predicted_idx_value not in idx_to_class:
+        raise ValueError(
+            f"Predicted class index {predicted_idx_value} not found in class mappings. "
+            f"Available indices: {list(idx_to_class.keys())}"
+        )
+
+    return idx_to_class[predicted_idx_value], confidence_value
